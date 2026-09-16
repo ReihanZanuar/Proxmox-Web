@@ -95,14 +95,29 @@ export const LoginPage: React.FC = () => {
 
           {/* Error Banner */}
           {error && (
-            <div className="p-3 rounded-theme bg-theme-danger-bg border border-theme-danger/30 text-theme-danger text-xs flex items-start space-x-2">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              <div>
-                <p className="font-semibold">{error}</p>
-                <p className="text-[11px] opacity-80 mt-0.5">
-                  Check if Proxmox IP is reachable and SSL port is 8006.
-                </p>
+            <div className="p-3.5 rounded-theme bg-theme-danger-bg border border-theme-danger/30 text-theme-danger text-xs space-y-2 animate-in fade-in duration-150">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                <div>
+                  <p className="font-bold">{error}</p>
+                  <p className="text-[11px] opacity-80 mt-0.5">
+                    {error.includes('ECONNREFUSED')
+                      ? 'Koneksi ke IP publik ditolak oleh router (masalah NAT loopback). Silakan pilih "Server Lokal (10.99.99.254:8006)" di bawah!'
+                      : 'Pastikan alamat IP/Domain Proxmox dapat dijangkau dan port 8006 terbuka.'}
+                  </p>
+                </div>
               </div>
+
+              {error.includes('ECONNREFUSED') && (
+                <button
+                  type="button"
+                  onClick={() => selectPresetHost('https://10.99.99.254:8006')}
+                  className="w-full py-1.5 px-2.5 rounded bg-theme-danger text-white font-bold text-xs flex items-center justify-center space-x-1 hover:opacity-90"
+                >
+                  <Wifi className="w-3.5 h-3.5" />
+                  <span>Alihkan ke Server Lokal (10.99.99.254:8006)</span>
+                </button>
+              )}
             </div>
           )}
 

@@ -166,6 +166,7 @@ export class ProxmoxClient {
     CSRFPreventionToken: string;
     username: string;
     isMock: boolean;
+    activeHost?: string;
   }> {
     const isMock = credentials.host === 'mock' || credentials.host === 'demo' || credentials.username === 'demo';
 
@@ -178,7 +179,7 @@ export class ProxmoxClient {
       };
     }
 
-    const host = credentials.host.replace(/\/$/, '');
+    const primaryHost = credentials.host.replace(/\/$/, '');
     const httpsAgent = new https.Agent({ rejectUnauthorized: false });
 
     // Format username: username@realm (e.g. root@pam or user@pve)
@@ -186,32 +187,66 @@ export class ProxmoxClient {
       ? credentials.username
       : `${credentials.username}@${credentials.realm || 'pam'}`;
 
-    try {
-      const response = await axios.post(
-        `${host}/api2/json/access/ticket`,
-        new URLSearchParams({
-          username: fullUsername,
-          password: credentials.password || '',
-          ...(credentials.otp ? { otp: credentials.otp } : {}),
-        }).toString(),
-        {
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          httpsAgent,
-          timeout: 10000,
-        }
-      );
+    // Build candidate hosts for auto-fallback (handles NAT loopback / port mismatches)
+    const candidateHosts = [primaryHost];
 
-      const data: ProxmoxTicketResponse = response.data.data;
-      return {
-        ticket: data.ticket,
-        CSRFPreventionToken: data.CSRFPreventionToken,
-        username: data.username,
-        isMock: false,
-      };
-    } catch (error: any) {
-      const msg = error.response?.data?.message || error.message || 'Proxmox authentication failed';
-      throw new Error(`Authentication Error: ${msg}`);
+    if (primaryHost.includes('tkjskanesa.my.id')) {
+      if (!candidateHosts.includes('https://10.99.99.254:8006')) {
+        candidateHosts.push('https://10.99.99.254:8006');
+      }
+      if (primaryHost.startsWith('https://')) {
+        candidateHosts.push(primaryHost.replace('https://', 'http://'));
+      }
+    } else if (primaryHost.includes('10.99.99.254')) {
+      if (!candidateHosts.includes('https://tkjskanesa.my.id:8081')) {
+        candidateHosts.push('https://tkjskanesa.my.id:8081');
+      }
     }
+
+    let lastError: any = null;
+
+    for (const hostToTry of candidateHosts) {
+      try {
+        const response = await axios.post(
+          `${hostToTry}/api2/json/access/ticket`,
+          new URLSearchParams({
+            username: fullUsername,
+            password: credentials.password || '',
+            ...(credentials.otp ? { otp: credentials.otp } : {}),
+          }).toString(),
+          {
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            httpsAgent,
+            timeout: 7000,
+          }
+        );
+
+        const data: ProxmoxTicketResponse = response.data.data;
+        return {
+          ticket: data.ticket,
+          CSRFPreventionToken: data.CSRFPreventionToken,
+          username: data.username,
+          isMock: false,
+          activeHost: hostToTry,
+        };
+      } catch (error: any) {
+        lastError = error;
+
+        // If it's a 401/403 or invalid password, the host is reachable but password was wrong, don't retry candidates
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+          const msg = error.response?.data?.message || 'Invalid username or password';
+          throw new Error(`Authentication Error: ${msg}`);
+        }
+
+        console.warn(`Host ${hostToTry} unreachable (${error.code || error.message}), trying next candidate...`);
+      }
+    }
+
+    const errorMsg =
+      lastError?.response?.data?.message ||
+      lastError?.message ||
+      'Proxmox authentication failed. Ensure Proxmox IP and port 8006 are reachable.';
+    throw new Error(`Authentication Error: ${errorMsg}`);
   }
 
   async getClusterResources(typeFilter?: string): Promise<ClusterResource[]> {

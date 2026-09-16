@@ -26,7 +26,7 @@ router.post('/login', async (req: Request, res: Response) => {
       ticket: authResult.ticket,
       csrfToken: authResult.CSRFPreventionToken,
       username: authResult.username,
-      host,
+      host: (authResult as any).activeHost || host,
       isMock: authResult.isMock,
     });
   } catch (error: any) {
