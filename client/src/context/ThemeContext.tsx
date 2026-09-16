@@ -8,10 +8,10 @@ interface ThemeContextType {
 }
 
 const availableThemes: { id: ThemeMode; label: string; description: string }[] = [
-  { id: 'dark', label: 'Dark Mode', description: 'Deep obsidian for high contrast' },
-  { id: 'light', label: 'Light Mode', description: 'Clean slate modern daylight' },
-  { id: 'neobrutalism', label: 'Neobrutalism', description: 'Bold black borders & pop colors' },
-  { id: 'minimalist-bw', label: 'Minimalist B&W', description: 'Swiss monochrome typography' },
+  { id: 'dark', label: 'Dark Mode (Obsidian)', description: 'Industrial charcoal with Proxmox flame accents' },
+  { id: 'light', label: 'Light Mode (Slate)', description: 'Clean technical slate with high-contrast carbon ink' },
+  { id: 'neobrutalism', label: 'Neobrutalism', description: 'Bold black borders & high-impact pop colors' },
+  { id: 'minimalist-bw', label: 'Minimalist B&W', description: 'Swiss monochrome engineering typography' },
 ];
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);

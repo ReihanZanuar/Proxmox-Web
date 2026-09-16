@@ -76,17 +76,17 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         return {
           background: '#FFFFFF',
           foreground: '#0F172A',
-          cursor: '#0284C7',
+          cursor: '#EA580C',
           cursorAccent: '#FFFFFF',
-          selectionBackground: '#BAE6FD',
+          selectionBackground: '#FED7AA',
           black: '#0F172A',
-          red: '#DC2626',
-          green: '#16A34A',
+          red: '#E11D48',
+          green: '#059669',
           yellow: '#D97706',
-          blue: '#0284C7',
-          magenta: '#9333EA',
+          blue: '#2563EB',
+          magenta: '#7C3AED',
           cyan: '#0891B2',
-          white: '#F8FAFC',
+          white: '#F0F2F5',
         };
       case 'neobrutalism':
         return {
@@ -123,19 +123,19 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
       case 'dark':
       default:
         return {
-          background: '#090D16',
-          foreground: '#F9FAFB',
-          cursor: '#38BDF8',
-          cursorAccent: '#090D16',
-          selectionBackground: '#0369A1',
-          black: '#1F2937',
-          red: '#EF4444',
-          green: '#22C55E',
+          background: '#0C0D0E',
+          foreground: '#EDEDEE',
+          cursor: '#EA580C',
+          cursorAccent: '#0C0D0E',
+          selectionBackground: 'rgba(234, 88, 12, 0.25)',
+          black: '#181B1F',
+          red: '#F43F5E',
+          green: '#10B981',
           yellow: '#F59E0B',
-          blue: '#38BDF8',
-          magenta: '#C084FC',
-          cyan: '#22D3EE',
-          white: '#F9FAFB',
+          blue: '#3B82F6',
+          magenta: '#A855F7',
+          cyan: '#06B6D4',
+          white: '#EDEDEE',
         };
     }
   };
