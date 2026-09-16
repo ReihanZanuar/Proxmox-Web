@@ -57,7 +57,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col justify-between p-4 sm:p-6 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors">
+    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col justify-between p-4 sm:p-6 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]">
       {/* Top Bar with Brand & Theme Switcher */}
       <div className="max-w-md w-full mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
@@ -192,6 +192,11 @@ export const LoginPage: React.FC = () => {
                       setIsCustomHost(true);
                     }}
                     placeholder="https://10.99.99.254:8006"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="url"
+                    inputMode="url"
                     required
                     className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-theme border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                   />
@@ -215,6 +220,10 @@ export const LoginPage: React.FC = () => {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="root"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="username"
                     required
                     className="w-full pl-9 pr-3 py-2.5 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
                   />
@@ -253,6 +262,10 @@ export const LoginPage: React.FC = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter password..."
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="current-password"
                     required
                     className="w-full pl-9 pr-3 py-2.5 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
                   />
@@ -271,6 +284,12 @@ export const LoginPage: React.FC = () => {
                 onChange={(e) => setOtp(e.target.value)}
                 placeholder="6-digit authentication code"
                 maxLength={6}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="one-time-code"
                 className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono tracking-widest text-center"
               />
             </div>
@@ -327,7 +346,7 @@ export const LoginPage: React.FC = () => {
 
       {/* Theme Selector Modal */}
       {showThemeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
           <div className="fixed inset-0" onClick={() => setShowThemeModal(false)} />
           <div className="relative w-full max-w-sm bg-theme-surface border-theme border-theme-border rounded-theme shadow-theme-hard p-5 z-10 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-theme-border">

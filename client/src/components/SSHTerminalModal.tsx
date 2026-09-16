@@ -336,7 +336,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col bg-black/85 backdrop-blur-sm ${
+      className={`fixed inset-0 z-50 flex flex-col bg-black/85 ${
         isFullScreen ? 'p-0' : 'p-0 sm:p-4'
       }`}
     >
@@ -465,6 +465,10 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
                     value={currentHost}
                     onChange={(e) => setCurrentHost(e.target.value)}
                     placeholder="e.g. 192.168.1.50"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="off"
                     required
                     className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                   />
@@ -478,6 +482,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
                     value={currentPort}
                     onChange={(e) => setCurrentPort(parseInt(e.target.value, 10) || 22)}
                     placeholder="22"
+                    inputMode="numeric"
                     required
                     className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                   />
@@ -491,6 +496,10 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
                     value={currentUser}
                     onChange={(e) => setCurrentUser(e.target.value)}
                     placeholder="root"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="off"
                     required
                     className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                   />
@@ -508,6 +517,10 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="SSH Password (optional if using keys or prompt)"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    autoComplete="off"
                     className="w-full pl-8 pr-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                   />
                 </div>

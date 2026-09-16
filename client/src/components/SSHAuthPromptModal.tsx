@@ -76,7 +76,7 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75">
       <div className="fixed inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-lg bg-theme-surface border-t sm:border-theme border-theme-border rounded-t-2xl sm:rounded-theme shadow-theme-hard p-5 sm:p-6 z-10 space-y-4 max-h-[92vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
@@ -161,6 +161,10 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
                       value={host}
                       onChange={(e) => setHost(e.target.value)}
                       placeholder="e.g. 10.99.99.247"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="off"
                       required
                       className="w-full pl-8 pr-3 py-2 text-xs font-mono rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
                     />
@@ -174,6 +178,7 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
                     value={port}
                     onChange={(e) => setPort(parseInt(e.target.value, 10) || 22)}
                     placeholder="22"
+                    inputMode="numeric"
                     className="w-full px-2.5 py-2 text-xs font-mono rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
                   />
                 </div>
@@ -214,6 +219,10 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="root"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="off"
                 required
                 className="w-full pl-8 pr-3 py-2 text-xs font-mono rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
               />
@@ -234,6 +243,10 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Masukkan password SSH / VM..."
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                autoComplete="off"
                 autoFocus
                 className="w-full pl-8 pr-3 py-2 text-xs font-mono rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent"
               />

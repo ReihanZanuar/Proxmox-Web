@@ -24,7 +24,7 @@ interface VMCardProps {
   ) => void;
 }
 
-export const VMCard: React.FC<VMCardProps> = ({
+const VMCardComponent: React.FC<VMCardProps> = ({
   resource,
   onSelect,
   onOpenSSH,
@@ -275,3 +275,6 @@ export const VMCard: React.FC<VMCardProps> = ({
     </div>
   );
 };
+
+export const VMCard = React.memo(VMCardComponent);
+

@@ -39,7 +39,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-theme-surface/98 backdrop-blur-md border-t border-theme-border pb-[env(safe-area-inset-bottom)] transition-colors">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-theme-surface border-t border-theme-border pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-lg mx-auto flex items-center justify-around h-16 px-2">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;

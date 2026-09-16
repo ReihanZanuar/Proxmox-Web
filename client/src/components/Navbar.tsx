@@ -20,7 +20,7 @@ export const Navbar: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-theme-surface/95 backdrop-blur-md border-b border-theme-border pt-[env(safe-area-inset-top)] transition-colors">
+    <header className="sticky top-0 z-40 bg-theme-surface border-b border-theme-border pt-[env(safe-area-inset-top)]">
       <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         {/* Brand Logo & Name */}
         <div className="flex items-center space-x-2.5 sm:space-x-3">
@@ -115,7 +115,7 @@ export const Navbar: React.FC = () => {
 
       {/* Theme Selector Modal */}
       {showThemeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75">
           <div
             className="fixed inset-0"
             onClick={() => setShowThemeModal(false)}

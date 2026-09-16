@@ -93,7 +93,7 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75">
       {/* Backdrop */}
       <div className="fixed inset-0" onClick={onClose} />
 
@@ -320,6 +320,10 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
                   value={sshHost}
                   onChange={(e) => setSshHost(e.target.value)}
                   placeholder="192.168.1.100 or domain"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
                   required
                   className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                 />
@@ -334,6 +338,7 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
                   value={sshPort}
                   onChange={(e) => setSshPort(e.target.value)}
                   placeholder="22"
+                  inputMode="numeric"
                   required
                   className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                 />
@@ -350,6 +355,10 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
                   value={sshUser}
                   onChange={(e) => setSshUser(e.target.value)}
                   placeholder="root"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
                   required
                   className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                 />
@@ -364,6 +373,10 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
                   value={sshPassword}
                   onChange={(e) => setSshPassword(e.target.value)}
                   placeholder="Leave empty for prompt or key"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
                   className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                 />
               </div>

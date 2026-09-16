@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ProxmoxAPI } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.js';
@@ -116,53 +116,58 @@ export const DashboardPage: React.FC = () => {
   });
 
   // Filter VMs and LXCs (exclude node/storage entries)
-  const vmsAndContainers = resources.filter(
-    (r) => r.type === 'qemu' || r.type === 'lxc'
-  );
+  const vmsAndContainers = useMemo(() => {
+    return resources.filter((r) => r.type === 'qemu' || r.type === 'lxc');
+  }, [resources]);
 
-  // Apply User Filters
-  const filteredResources = vmsAndContainers.filter((r) => {
-    // Type/Status filter
-    if (filterType === 'running' && r.status !== 'running') return false;
-    if (filterType === 'stopped' && r.status !== 'stopped') return false;
-    if (filterType === 'qemu' && r.type !== 'qemu') return false;
-    if (filterType === 'lxc' && r.type !== 'lxc') return false;
+  // Apply User Filters & Sorting with memoization
+  const filteredResources = useMemo(() => {
+    const list = vmsAndContainers.filter((r) => {
+      // Type/Status filter
+      if (filterType === 'running' && r.status !== 'running') return false;
+      if (filterType === 'stopped' && r.status !== 'stopped') return false;
+      if (filterType === 'qemu' && r.type !== 'qemu') return false;
+      if (filterType === 'lxc' && r.type !== 'lxc') return false;
 
-    // Search query filter
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = r.name?.toLowerCase().includes(q);
-      const matchId = r.vmid?.toString().includes(q);
-      const matchTags = r.tags?.toLowerCase().includes(q);
-      const matchNode = r.node?.toLowerCase().includes(q);
-      return matchName || matchId || matchTags || matchNode;
-    }
+      // Search query filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchName = r.name?.toLowerCase().includes(q);
+        const matchId = r.vmid?.toString().includes(q);
+        const matchTags = r.tags?.toLowerCase().includes(q);
+        const matchNode = r.node?.toLowerCase().includes(q);
+        return matchName || matchId || matchTags || matchNode;
+      }
 
-    return true;
-  });
+      return true;
+    });
 
-  // Apply Sorting
-  filteredResources.sort((a, b) => {
-    switch (sortBy) {
-      case 'name':
-        return (a.name || '').localeCompare(b.name || '');
-      case 'cpu':
-        return (b.cpu || 0) - (a.cpu || 0);
-      case 'mem':
-        return (b.mem || 0) - (a.mem || 0);
-      case 'status':
-        return a.status.localeCompare(b.status);
-      case 'id':
-      default:
-        return (a.vmid || 0) - (b.vmid || 0);
-    }
-  });
+    return list.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return (a.name || '').localeCompare(b.name || '');
+        case 'cpu':
+          return (b.cpu || 0) - (a.cpu || 0);
+        case 'mem':
+          return (b.mem || 0) - (a.mem || 0);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'id':
+        default:
+          return (a.vmid || 0) - (b.vmid || 0);
+      }
+    });
+  }, [vmsAndContainers, filterType, searchQuery, sortBy]);
 
   // Cluster aggregate stats
-  const totalVMs = vmsAndContainers.length;
-  const runningVMs = vmsAndContainers.filter((r) => r.status === 'running').length;
-  const totalQemu = vmsAndContainers.filter((r) => r.type === 'qemu').length;
-  const totalLxc = vmsAndContainers.filter((r) => r.type === 'lxc').length;
+  const { totalVMs, runningVMs, totalQemu, totalLxc } = useMemo(() => {
+    return {
+      totalVMs: vmsAndContainers.length,
+      runningVMs: vmsAndContainers.filter((r) => r.status === 'running').length,
+      totalQemu: vmsAndContainers.filter((r) => r.type === 'qemu').length,
+      totalLxc: vmsAndContainers.filter((r) => r.type === 'lxc').length,
+    };
+  }, [vmsAndContainers]);
 
   const handleOpenSSH = async (resource: ClusterResource) => {
     // 1. Check local cache first for saved credentials
@@ -258,7 +263,7 @@ export const DashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col transition-colors pb-20">
+    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col pb-20">
       <Navbar />
 
       <main className="max-w-4xl w-full mx-auto px-3 sm:px-6 pt-3 sm:pt-6 space-y-4">
@@ -346,6 +351,11 @@ export const DashboardPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search VM / Container by name, ID..."
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
+                  inputMode="search"
                   className="w-full pl-10 pr-9 py-2.5 text-sm rounded-theme border border-theme-border bg-theme-surface text-theme-text-primary focus:outline-none focus:border-theme-accent"
                 />
                 {searchQuery && (
@@ -511,6 +521,10 @@ export const DashboardPage: React.FC = () => {
                       value={quickSshHost}
                       onChange={(e) => setQuickSshHost(e.target.value)}
                       placeholder="e.g. 192.168.1.50"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="off"
                       required
                       className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                     />
@@ -521,6 +535,7 @@ export const DashboardPage: React.FC = () => {
                       type="number"
                       value={quickSshPort}
                       onChange={(e) => setQuickSshPort(parseInt(e.target.value, 10) || 22)}
+                      inputMode="numeric"
                       className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                     />
                   </div>
@@ -534,6 +549,10 @@ export const DashboardPage: React.FC = () => {
                       value={quickSshUser}
                       onChange={(e) => setQuickSshUser(e.target.value)}
                       placeholder="root"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="off"
                       required
                       className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                     />
@@ -545,6 +564,10 @@ export const DashboardPage: React.FC = () => {
                       value={quickSshPass}
                       onChange={(e) => setQuickSshPass(e.target.value)}
                       placeholder="••••••••"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      autoComplete="off"
                       className="w-full px-3 py-2 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
                     />
                   </div>
