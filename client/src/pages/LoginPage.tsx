@@ -13,22 +13,36 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
+  Globe,
+  Wifi,
+  Check,
 } from 'lucide-react';
 
 export const LoginPage: React.FC = () => {
   const { login, startDemoMode, error, isLoading, clearError } = useAuth();
   const { theme, setTheme, availableThemes } = useTheme();
 
-  const [host, setHost] = useState('https://192.168.1.100:8006');
+  const savedHost = localStorage.getItem('pve_last_host') || 'https://10.99.99.254:8006';
+  const [host, setHost] = useState(savedHost);
   const [username, setUsername] = useState('root');
   const [realm, setRealm] = useState('pam');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [showThemeModal, setShowThemeModal] = useState(false);
+  const [isCustomHost, setIsCustomHost] = useState(
+    savedHost !== 'https://10.99.99.254:8006' && savedHost !== 'https://tkjskanesa.my.id:8081'
+  );
+
+  const selectPresetHost = (url: string) => {
+    setHost(url);
+    setIsCustomHost(false);
+    localStorage.setItem('pve_last_host', url);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+    localStorage.setItem('pve_last_host', host.trim());
     try {
       await login({
         host: host.trim(),
@@ -94,24 +108,79 @@ export const LoginPage: React.FC = () => {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Host Address */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-theme-text-primary flex items-center justify-between">
-                <span>Proxmox Server URL</span>
-                <span className="text-[11px] text-theme-text-muted font-normal">Port 8006</span>
+            {/* Server Target Preset Selector (Local vs Public Domain) */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-theme-text-primary flex items-center justify-between">
+                <span>Pilih Alamat Server Proxmox</span>
+                <span className="text-[11px] text-theme-text-muted font-normal">1-Klik Pilih</span>
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-theme-text-muted">
-                  <Server className="w-4 h-4" />
+
+              <div className="grid grid-cols-2 gap-2">
+                {/* Option 1: Local Network */}
+                <button
+                  type="button"
+                  onClick={() => selectPresetHost('https://10.99.99.254:8006')}
+                  className={`p-2.5 rounded-theme border text-left transition-all flex flex-col justify-between ${
+                    host === 'https://10.99.99.254:8006' && !isCustomHost
+                      ? 'border-theme-accent bg-theme-card ring-2 ring-theme-accent/30 shadow-theme-sm'
+                      : 'border-theme-border bg-theme-bg hover:bg-theme-card opacity-85'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs font-bold text-theme-text-primary flex items-center">
+                      <Wifi className="w-3.5 h-3.5 mr-1.5 text-theme-accent" /> Server Lokal
+                    </span>
+                    {host === 'https://10.99.99.254:8006' && !isCustomHost && (
+                      <Check className="w-3.5 h-3.5 text-theme-accent" />
+                    )}
+                  </div>
+                  <span className="text-[11px] font-mono text-theme-text-muted mt-1 truncate">
+                    10.99.99.254:8006
+                  </span>
+                </button>
+
+                {/* Option 2: Public Gateway */}
+                <button
+                  type="button"
+                  onClick={() => selectPresetHost('https://tkjskanesa.my.id:8081')}
+                  className={`p-2.5 rounded-theme border text-left transition-all flex flex-col justify-between ${
+                    host === 'https://tkjskanesa.my.id:8081' && !isCustomHost
+                      ? 'border-theme-accent bg-theme-card ring-2 ring-theme-accent/30 shadow-theme-sm'
+                      : 'border-theme-border bg-theme-bg hover:bg-theme-card opacity-85'
+                  }`}
+                >
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xs font-bold text-theme-text-primary flex items-center">
+                      <Globe className="w-3.5 h-3.5 mr-1.5 text-theme-accent" /> Domain Publik
+                    </span>
+                    {host === 'https://tkjskanesa.my.id:8081' && !isCustomHost && (
+                      <Check className="w-3.5 h-3.5 text-theme-accent" />
+                    )}
+                  </div>
+                  <span className="text-[11px] font-mono text-theme-text-muted mt-1 truncate">
+                    tkjskanesa.my.id:8081
+                  </span>
+                </button>
+              </div>
+
+              {/* Host Address Input */}
+              <div className="pt-1">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-theme-text-muted">
+                    <Server className="w-4 h-4" />
+                  </div>
+                  <input
+                    type="text"
+                    value={host}
+                    onChange={(e) => {
+                      setHost(e.target.value);
+                      setIsCustomHost(true);
+                    }}
+                    placeholder="https://10.99.99.254:8006"
+                    required
+                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm rounded-theme border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
+                  />
                 </div>
-                <input
-                  type="text"
-                  value={host}
-                  onChange={(e) => setHost(e.target.value)}
-                  placeholder="https://192.168.1.100:8006"
-                  required
-                  className="w-full pl-9 pr-3 py-2.5 text-sm rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
-                />
               </div>
             </div>
 
