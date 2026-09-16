@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import modern typography */
+@layer base {
+  :root {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    color-scheme: dark;
+  }
+
+  /* Theme 1: Dark Mode (Default) */
+  :root[data-theme="dark"] {
+    --color-bg: #090D16;
+    --color-surface: #111827;
+    --color-card: #151D2F;
+    --color-border: #1F2937;
+    --color-text-primary: #F9FAFB;
+    --color-text-muted: #9CA3AF;
+    --color-accent: #0284C7;
+    --color-accent-hover: #0369A1;
+    --color-accent-fg: #FFFFFF;
+    --color-running: #22C55E;
+    --color-running-bg: rgba(34, 197, 94, 0.15);
+    --color-stopped: #9CA3AF;
+    --color-stopped-bg: rgba(156, 163, 175, 0.15);
+    --color-warning: #F59E0B;
+    --color-warning-bg: rgba(245, 158, 11, 0.15);
+    --color-danger: #EF4444;
+    --color-danger-bg: rgba(239, 68, 68, 0.15);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    --shadow-hard: none;
+    --radius-theme: 10px;
+    --radius-theme-sm: 6px;
+    --border-width-theme: 1px;
+    color-scheme: dark;
+  }
+
+  /* Theme 2: Light Mode */
+  :root[data-theme="light"] {
+    --color-bg: #F8FAFC;
+    --color-surface: #FFFFFF;
+    --color-card: #FFFFFF;
+    --color-border: #E2E8F0;
+    --color-text-primary: #0F172A;
+    --color-text-muted: #64748B;
+    --color-accent: #0284C7;
+    --color-accent-hover: #0369A1;
+    --color-accent-fg: #FFFFFF;
+    --color-running: #16A34A;
+    --color-running-bg: #DCFCE7;
+    --color-stopped: #64748B;
+    --color-stopped-bg: #F1F5F9;
+    --color-warning: #D97706;
+    --color-warning-bg: #FEF3C7;
+    --color-danger: #DC2626;
+    --color-danger-bg: #FEE2E2;
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+    --shadow-hard: none;
+    --radius-theme: 10px;
+    --radius-theme-sm: 6px;
+    --border-width-theme: 1px;
+    color-scheme: light;
+  }
+
+  /* Theme 3: Neobrutalism */
+  :root[data-theme="neobrutalism"] {
+    --color-bg: #FFFBEB;
+    --color-surface: #FFFFFF;
+    --color-card: #FFFFFF;
+    --color-border: #000000;
+    --color-text-primary: #000000;
+    --color-text-muted: #262626;
+    --color-accent: #FFE600;
+    --color-accent-hover: #FFD000;
+    --color-accent-fg: #000000;
+    --color-running: #00E676;
+    --color-running-bg: #B9F6CA;
+    --color-stopped: #E0E0E0;
+    --color-stopped-bg: #F5F5F5;
+    --color-warning: #FF9100;
+    --color-warning-bg: #FFE0B2;
+    --color-danger: #FF1744;
+    --color-danger-bg: #FFCDD2;
+    --shadow-sm: 2px 2px 0px #000000;
+    --shadow-md: 4px 4px 0px #000000;
+    --shadow-hard: 5px 5px 0px #000000;
+    --radius-theme: 4px;
+    --radius-theme-sm: 2px;
+    --border-width-theme: 2.5px;
+    color-scheme: light;
+  }
+
+  /* Theme 4: Minimalist Black & White */
+  :root[data-theme="minimalist-bw"] {
+    --color-bg: #FFFFFF;
+    --color-surface: #FFFFFF;
+    --color-card: #FAFAFA;
+    --color-border: #18181B;
+    --color-text-primary: #000000;
+    --color-text-muted: #52525B;
+    --color-accent: #000000;
+    --color-accent-hover: #27272A;
+    --color-accent-fg: #FFFFFF;
+    --color-running: #000000;
+    --color-running-bg: #E4E4E7;
+    --color-stopped: #71717A;
+    --color-stopped-bg: #F4F4F5;
+    --color-warning: #000000;
+    --color-warning-bg: #E4E4E7;
+    --color-danger: #000000;
+    --color-danger-bg: #E4E4E7;
+    --shadow-sm: none;
+    --shadow-md: none;
+    --shadow-hard: none;
+    --radius-theme: 0px;
+    --radius-theme-sm: 0px;
+    --border-width-theme: 1px;
+    color-scheme: light;
+  }
+}
+
+/* Custom Utilities for Anti-Slop & Neo-brutalism */
+@layer utilities {
+  .theme-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-theme-sm);
+    border-width: var(--border-width-theme);
+    border-color: var(--color-border);
+    transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.15s ease;
+  }
+
+  :root[data-theme="neobrutalism"] .theme-btn {
+    box-shadow: 3px 3px 0px #000000;
+  }
+
+  :root[data-theme="neobrutalism"] .theme-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0px #000000;
+  }
+
+  :root[data-theme="neobrutalism"] .theme-card {
+    box-shadow: 4px 4px 0px #000000;
+    border-color: #000000;
+  }
+
+  :root[data-theme="minimalist-bw"] .theme-card {
+    border-color: #000000;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: var(--radius-theme-sm);
+}
+
+/* Touch targets optimization */
+button, a, input, select {
+  touch-action: manipulation;
+}
+
+/* Terminal Full Screen & Xterm container fix */
+.xterm .xterm-viewport {
+  overflow-y: auto !important;
+}
