@@ -252,43 +252,36 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
               <h3 className="font-bold text-xs uppercase tracking-wider text-theme-text-muted">
                 Power Management
               </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {!isRunning ? (
                   <button
                     onClick={() => onPowerAction(resource, 'start')}
-                    className="theme-btn bg-theme-running text-white hover:opacity-90 col-span-2 sm:col-span-4"
+                    className="theme-btn bg-theme-accent text-theme-accent-fg hover:bg-theme-accent-hover col-span-3 py-2.5 text-xs font-bold"
                   >
-                    <Play className="w-4 h-4 mr-2" /> Start Instance
+                    <Play className="w-4 h-4 mr-2" /> Nyalakan VM
                   </button>
                 ) : (
                   <>
                     <button
                       onClick={() => onPowerAction(resource, 'shutdown')}
-                      className="theme-btn bg-theme-surface text-theme-text-primary hover:border-theme-warning"
+                      className="theme-btn bg-theme-surface text-theme-text-primary hover:bg-theme-bg py-2.5 text-xs font-semibold flex items-center justify-center"
                     >
-                      <Square className="w-3.5 h-3.5 mr-1.5 text-theme-warning" />
-                      ACPI Shutdown
+                      <Square className="w-3.5 h-3.5 mr-1.5 text-theme-danger" />
+                      <span>Matikan</span>
                     </button>
                     <button
                       onClick={() => onPowerAction(resource, 'reboot')}
-                      className="theme-btn bg-theme-surface text-theme-text-primary hover:border-theme-warning"
+                      className="theme-btn bg-theme-surface text-theme-text-primary hover:bg-theme-bg py-2.5 text-xs font-semibold flex items-center justify-center"
                     >
                       <RotateCw className="w-3.5 h-3.5 mr-1.5 text-theme-warning" />
-                      Reboot
+                      <span>Reboot</span>
                     </button>
                     <button
                       onClick={() => setConfirmAction('stop')}
-                      className="theme-btn bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white"
+                      className="theme-btn bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white py-2.5 text-xs font-semibold flex items-center justify-center"
                     >
                       <PowerOff className="w-3.5 h-3.5 mr-1.5" />
-                      Force Stop
-                    </button>
-                    <button
-                      onClick={() => setConfirmAction('reset')}
-                      className="theme-btn bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white"
-                    >
-                      <AlertTriangle className="w-3.5 h-3.5 mr-1.5" />
-                      Hard Reset
+                      <span>Force Stop</span>
                     </button>
                   </>
                 )}

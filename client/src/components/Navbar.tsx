@@ -10,7 +10,6 @@ import {
   Smartphone,
   ChevronDown,
   X,
-  Radio,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -32,8 +31,8 @@ export const Navbar: React.FC = () => {
               <span className="font-bold text-base sm:text-lg tracking-tight text-theme-text-primary">
                 ProxMobile
               </span>
-              <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded-theme bg-theme-running-bg text-theme-running border border-theme-running/20 flex items-center">
-                <Radio className="w-2.5 h-2.5 mr-1 animate-pulse" /> PVE
+              <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded-theme-sm bg-theme-bg text-theme-text-muted border border-theme-border flex items-center">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 mr-1 shrink-0" /> PVE
               </span>
             </div>
             <p className="text-[11px] sm:text-xs font-mono text-theme-text-muted truncate max-w-[140px] sm:max-w-xs">

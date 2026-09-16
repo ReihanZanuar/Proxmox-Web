@@ -104,12 +104,20 @@ export const DashboardPage: React.FC = () => {
       );
     },
     onSuccess: (_data, variables) => {
-      showToast(`Action '${variables.action}' dispatched for ${variables.resource.name || variables.resource.vmid}`);
+      const name = variables.resource.name || `VM ${variables.resource.vmid}`;
+      const actionMap: Record<string, string> = {
+        start: `Memulai ${name}...`,
+        shutdown: `Mematikan ${name}...`,
+        reboot: `Merestart ${name}...`,
+        stop: `Force stop ${name}...`,
+        reset: `Reset ${name}...`,
+      };
+      showToast(actionMap[variables.action] || `${variables.action} ${name}`);
       queryClient.invalidateQueries({ queryKey: ['clusterResources'] });
     },
-    onError: (err: any, variables) => {
+    onError: (err: any) => {
       showToast(
-        `Failed to execute ${variables.action}: ${err.message || 'Proxmox API Error'}`,
+        err.message || 'Gagal mengeksekusi perintah Proxmox',
         'error'
       );
     },
@@ -272,25 +280,25 @@ export const DashboardPage: React.FC = () => {
         {/* Toast Notification */}
         {toastMessage && (
           <div
-            className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 z-50 p-3 rounded-theme shadow-theme-hard border flex items-center justify-between text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-200 ${
+            className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 z-50 px-3.5 py-2.5 rounded-theme shadow-theme-md border flex items-center justify-between text-xs font-semibold animate-in fade-in slide-in-from-top-2 duration-200 ${
               toastMessage.type === 'success'
-                ? 'bg-theme-running-bg text-theme-running border-theme-running/30'
-                : 'bg-theme-danger-bg text-theme-danger border-theme-danger/30'
+                ? 'bg-theme-card text-theme-text-primary border-theme-border'
+                : 'bg-theme-danger-bg text-theme-danger border-theme-danger/40'
             }`}
           >
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2.5">
               {toastMessage.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-theme-accent shrink-0" />
               ) : (
-                <AlertCircle className="w-4 h-4 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-theme-danger shrink-0" />
               )}
               <span>{toastMessage.text}</span>
             </div>
             <button
               onClick={() => setToastMessage(null)}
-              className="p-1 text-current opacity-70 hover:opacity-100"
+              className="p-1 -mr-1 text-theme-text-muted hover:text-theme-text-primary"
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}

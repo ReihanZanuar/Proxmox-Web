@@ -143,6 +143,15 @@ const VMCardComponent: React.FC<VMCardProps> = ({
                       <button
                         onClick={() => {
                           setShowMenu(false);
+                          onPowerAction(resource, 'shutdown');
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs font-semibold text-theme-text-primary hover:bg-theme-bg rounded-theme-sm flex items-center"
+                      >
+                        <Square className="w-3.5 h-3.5 mr-2 text-theme-danger" /> Matikan
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowMenu(false);
                           onPowerAction(resource, 'reboot');
                         }}
                         className="w-full text-left px-3 py-2 text-xs font-semibold text-theme-warning hover:bg-theme-bg rounded-theme-sm flex items-center"
@@ -152,11 +161,11 @@ const VMCardComponent: React.FC<VMCardProps> = ({
                       <button
                         onClick={() => {
                           setShowMenu(false);
-                          onPowerAction(resource, 'shutdown');
+                          onPowerAction(resource, 'stop');
                         }}
                         className="w-full text-left px-3 py-2 text-xs font-semibold text-theme-danger hover:bg-theme-bg rounded-theme-sm flex items-center"
                       >
-                        <Square className="w-3.5 h-3.5 mr-2" /> ACPI Shutdown
+                        <Square className="w-3.5 h-3.5 mr-2 text-theme-danger fill-current" /> Force Stop
                       </button>
                     </>
                   ) : (
@@ -165,7 +174,7 @@ const VMCardComponent: React.FC<VMCardProps> = ({
                         setShowMenu(false);
                         onPowerAction(resource, 'start');
                       }}
-                      className="w-full text-left px-3 py-2 text-xs font-semibold text-theme-running hover:bg-theme-bg rounded-theme-sm flex items-center"
+                      className="w-full text-left px-3 py-2 text-xs font-semibold text-theme-accent hover:bg-theme-bg rounded-theme-sm flex items-center"
                     >
                       <Play className="w-3.5 h-3.5 mr-2" /> Start VM
                     </button>
