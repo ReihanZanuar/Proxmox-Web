@@ -76,18 +76,21 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-xs">
       <div className="fixed inset-0" onClick={onClose} />
 
-      <div className="relative w-full max-w-md bg-theme-surface border-theme border-theme-border rounded-theme shadow-theme-hard p-5 sm:p-6 z-10 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div className="relative w-full max-w-lg bg-theme-surface border-t sm:border-theme border-theme-border rounded-t-2xl sm:rounded-theme shadow-theme-hard p-5 sm:p-6 z-10 space-y-4 max-h-[92vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+        {/* Mobile Grabber Handle */}
+        <div className="sheet-handle sm:hidden" />
+
         {/* Header */}
         <div className="flex items-start justify-between pb-3 border-b border-theme-border">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-theme-sm bg-theme-accent text-theme-accent-fg flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-theme bg-theme-accent text-theme-accent-fg flex items-center justify-center font-bold">
               <Terminal className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-theme-text-primary">
+              <h3 className="font-bold text-base sm:text-lg text-theme-text-primary">
                 SSH Terminal Login
               </h3>
               <p className="text-xs text-theme-text-muted">
@@ -98,7 +101,7 @@ export const SSHAuthPromptModal: React.FC<SSHAuthPromptModalProps> = ({
 
           <button
             onClick={onClose}
-            className="p-1 rounded-theme-sm text-theme-text-muted hover:text-theme-text-primary"
+            className="p-1.5 rounded-theme-sm text-theme-text-muted hover:text-theme-text-primary"
             aria-label="Close"
           >
             <X className="w-5 h-5" />

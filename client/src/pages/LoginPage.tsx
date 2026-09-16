@@ -43,7 +43,7 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col justify-between p-4 sm:p-6 transition-colors">
+    <div className="min-h-screen bg-theme-bg text-theme-text-primary flex flex-col justify-between p-4 sm:p-6 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] transition-colors">
       {/* Top Bar with Brand & Theme Switcher */}
       <div className="max-w-md w-full mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-2.5">

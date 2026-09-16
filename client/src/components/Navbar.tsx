@@ -20,24 +20,24 @@ export const Navbar: React.FC = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-theme-surface/95 backdrop-blur-sm border-b border-theme-border transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <header className="sticky top-0 z-40 bg-theme-surface/95 backdrop-blur-md border-b border-theme-border pt-[env(safe-area-inset-top)] transition-colors">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
         {/* Brand Logo & Name */}
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-theme bg-theme-accent text-theme-accent-fg flex items-center justify-center font-bold text-lg shadow-theme-sm border border-theme-border">
-            <Server className="w-5 h-5" strokeWidth={2} />
+        <div className="flex items-center space-x-2.5 sm:space-x-3">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-theme bg-theme-accent text-theme-accent-fg flex items-center justify-center font-bold text-base sm:text-lg shadow-theme-sm border border-theme-border">
+            <Server className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2} />
           </div>
           <div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
               <span className="font-bold text-base sm:text-lg tracking-tight text-theme-text-primary">
                 ProxMobile
               </span>
               <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-1.5 py-0.5 rounded-theme bg-theme-running-bg text-theme-running border border-theme-running/20 flex items-center">
-                <Radio className="w-2.5 h-2.5 mr-1 animate-pulse" /> PVE 8
+                <Radio className="w-2.5 h-2.5 mr-1 animate-pulse" /> PVE
               </span>
             </div>
-            <p className="text-xs font-mono text-theme-text-muted hidden sm:block">
-              {session?.isMock ? 'Demo Cluster (Offline)' : session?.host}
+            <p className="text-[11px] sm:text-xs font-mono text-theme-text-muted truncate max-w-[140px] sm:max-w-xs">
+              {session?.isMock ? 'Demo Cluster' : session?.host?.replace('https://', '').replace('http://', '')}
             </p>
           </div>
         </div>

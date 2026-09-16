@@ -336,17 +336,17 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex flex-col bg-black/80 backdrop-blur-sm ${
-        isFullScreen ? 'p-0' : 'p-2 sm:p-4'
+      className={`fixed inset-0 z-50 flex flex-col bg-black/85 backdrop-blur-sm ${
+        isFullScreen ? 'p-0' : 'p-0 sm:p-4'
       }`}
     >
       <div
-        className={`flex flex-col bg-theme-surface border-theme border-theme-border rounded-theme shadow-theme-hard overflow-hidden flex-1 ${
-          isFullScreen ? 'h-full rounded-none border-0' : 'max-w-5xl mx-auto w-full'
+        className={`flex flex-col bg-theme-surface border-theme border-theme-border rounded-none sm:rounded-theme shadow-theme-hard overflow-hidden flex-1 ${
+          isFullScreen ? 'h-full rounded-none border-0' : 'max-w-5xl mx-auto w-full h-full sm:h-auto'
         }`}
       >
-        {/* Terminal Header Bar */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 bg-theme-card border-b border-theme-border">
+        {/* Terminal Header Bar with Safe Area Top */}
+        <div className="flex items-center justify-between px-3.5 py-2.5 bg-theme-card border-b border-theme-border pt-[max(0.625rem,env(safe-area-inset-top))] sm:pt-2.5">
           <div className="flex items-center space-x-2.5">
             <div className="w-7 h-7 rounded-theme-sm bg-theme-accent/20 text-theme-accent flex items-center justify-center font-bold">
               <TerminalIcon className="w-4 h-4" />
@@ -540,8 +540,8 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           onClick={() => xtermInstance.current?.focus()}
         />
 
-        {/* Mobile-Friendly Virtual Accessory Toolbar */}
-        <div className="bg-theme-card border-t border-theme-border p-1.5 sm:p-2 flex items-center justify-between overflow-x-auto space-x-1.5">
+        {/* Mobile-Friendly Virtual Accessory Toolbar with Safe Area */}
+        <div className="bg-theme-card border-t border-theme-border p-1.5 sm:p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-between overflow-x-auto space-x-1.5">
           <div className="flex items-center space-x-1.5">
             <button
               onClick={() => sendKey('\x1b')}

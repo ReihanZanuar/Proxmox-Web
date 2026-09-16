@@ -171,12 +171,41 @@
   border-radius: var(--radius-theme-sm);
 }
 
-/* Touch targets optimization */
-button, a, input, select {
+/* Touch targets and mobile optimizations */
+button, a, input, select, textarea {
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent auto-zoom on iOS input focus by ensuring minimum 16px font size on mobile inputs */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* iOS Safe Area Utilities */
+.pt-safe {
+  padding-top: max(1rem, env(safe-area-inset-top));
+}
+.pb-safe {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.pb-nav {
+  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
 }
 
 /* Terminal Full Screen & Xterm container fix */
 .xterm .xterm-viewport {
   overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Bottom Sheet Grabber */
+.sheet-handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: var(--color-border);
+  margin: 0 auto 0.75rem auto;
 }

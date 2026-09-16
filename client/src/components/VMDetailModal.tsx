@@ -98,7 +98,9 @@ export const VMDetailModal: React.FC<VMDetailModalProps> = ({
       <div className="fixed inset-0" onClick={onClose} />
 
       {/* Modal / Bottom Drawer Container */}
-      <div className="relative w-full max-w-2xl bg-theme-surface border-t sm:border-theme border-theme-border rounded-t-2xl sm:rounded-theme shadow-theme-hard p-5 sm:p-6 z-10 max-h-[90vh] overflow-y-auto space-y-5">
+      <div className="relative w-full max-w-2xl bg-theme-surface border-t sm:border-theme border-theme-border rounded-t-2xl sm:rounded-theme shadow-theme-hard p-5 sm:p-6 z-10 max-h-[92vh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:pb-6 space-y-5 animate-in fade-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
+        {/* Mobile Grabber Handle */}
+        <div className="sheet-handle sm:hidden" />
         {/* Header */}
         <div className="flex items-start justify-between pb-3 border-b border-theme-border">
           <div className="flex items-center space-x-3">
