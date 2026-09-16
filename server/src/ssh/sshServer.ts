@@ -115,26 +115,37 @@ function handleRealSSH(ws: WebSocket, opts: RealSSHOptions) {
 
   // Handle messages from client
   ws.on('message', (msg: string | Buffer) => {
-    try {
-      const text = msg.toString();
-
-      // Check if message is a JSON resize or control command
-      if (text.startsWith('{"type":')) {
-        const parsed = JSON.parse(text);
-        if (parsed.type === 'resize' && stream) {
-          stream.setWindow(parsed.rows || 24, parsed.cols || 80, 0, 0);
-          return;
+    // Fast path: if single keystroke (not JSON), write directly to SSH stream
+    if (typeof msg === 'string') {
+      if (msg.charCodeAt(0) === 123 && msg.startsWith('{"type":')) {
+        try {
+          const parsed = JSON.parse(msg);
+          if (parsed.type === 'resize' && stream) {
+            stream.setWindow(parsed.rows || 24, parsed.cols || 80, 0, 0);
+            return;
+          }
+        } catch {
+          // Pass through
         }
       }
-
-      // Normal keystrokes to remote shell
-      if (stream) {
-        stream.write(text);
+      if (stream) stream.write(msg);
+    } else {
+      // Buffer input
+      if (msg.length > 8 && msg[0] === 123) {
+        const text = msg.toString('utf-8');
+        if (text.startsWith('{"type":')) {
+          try {
+            const parsed = JSON.parse(text);
+            if (parsed.type === 'resize' && stream) {
+              stream.setWindow(parsed.rows || 24, parsed.cols || 80, 0, 0);
+              return;
+            }
+          } catch {
+            // Pass through
+          }
+        }
       }
-    } catch {
-      if (stream) {
-        stream.write(msg.toString());
-      }
+      if (stream) stream.write(msg);
     }
   });
 
@@ -151,7 +162,8 @@ function handleRealSSH(ws: WebSocket, opts: RealSSHOptions) {
     password: opts.password,
     privateKey: opts.privateKey,
     readyTimeout: 15000,
-    keepaliveInterval: 10000,
+    keepaliveInterval: 5000,
+    keepaliveCountMax: 3,
   });
 }
 

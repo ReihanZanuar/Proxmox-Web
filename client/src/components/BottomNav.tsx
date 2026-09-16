@@ -7,12 +7,14 @@ interface BottomNavProps {
   activeTab: TabId;
   onChangeTab: (tab: TabId) => void;
   runningCount: number;
+  hasActiveSSH?: boolean;
 }
 
 export const BottomNav: React.FC<BottomNavProps> = ({
   activeTab,
   onChangeTab,
   runningCount,
+  hasActiveSSH = false,
 }) => {
   const tabs = [
     {
@@ -23,8 +25,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
     },
     {
       id: 'ssh' as TabId,
-      label: 'Quick SSH',
+      label: hasActiveSSH ? 'SSH (Live)' : 'Quick SSH',
       icon: Terminal,
+      dot: hasActiveSSH,
     },
     {
       id: 'cluster' as TabId,
@@ -64,6 +67,9 @@ export const BottomNav: React.FC<BottomNavProps> = ({
                   <span className="absolute -top-1 -right-2 px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-theme-running text-white">
                     {tab.badge}
                   </span>
+                )}
+                {tab.dot && !tab.badge && (
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-theme-running animate-pulse ring-2 ring-theme-surface" />
                 )}
               </div>
               <span className={`text-[11px] mt-1 ${isActive ? 'font-bold text-theme-text-primary' : 'font-medium'}`}>

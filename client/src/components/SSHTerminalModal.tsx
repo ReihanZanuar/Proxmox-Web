@@ -6,9 +6,6 @@ import '@xterm/xterm/css/xterm.css';
 import { SSHConnectionConfig } from '../types/index.js';
 import { useTheme } from '../context/ThemeContext.js';
 import {
-  X,
-  Maximize2,
-  Minimize2,
   RefreshCw,
   Terminal as TerminalIcon,
   Wifi,
@@ -23,6 +20,7 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
+  LogOut,
 } from 'lucide-react';
 
 interface SSHTerminalModalProps {
@@ -42,8 +40,6 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   const cached = cacheKey ? localStorage.getItem(cacheKey) : null;
   const parsedCache = cached ? JSON.parse(cached) : null;
 
-  // Determine initial host:
-  // If config.host looks like an IP address or valid domain, use it; otherwise fallback to cached or prompt
   const isIpOrFqdn =
     /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/.test(config.host) ||
     config.host.includes('.') ||
@@ -64,7 +60,6 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   // Status & UI toggles
   const [status, setStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isFullScreen, setIsFullScreen] = useState(false);
   const [showSettings, setShowSettings] = useState<boolean>(!initialHost);
   const [ctrlActive, setCtrlActive] = useState(false);
   const [altActive, setAltActive] = useState(false);
@@ -236,15 +231,19 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   useEffect(() => {
     if (!terminalRef.current) return;
 
-    // Initialize xterm.js
+    // Initialize xterm.js with optimized mobile typing parameters
     const term = new Terminal({
       cursorBlink: true,
-      fontSize: 14,
-      fontFamily: 'JetBrains Mono, Menlo, Courier New, monospace',
-      lineHeight: 1.25,
+      cursorStyle: 'block',
+      fontSize: 13,
+      fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
+      lineHeight: 1.2,
       theme: getTerminalTheme(),
       allowProposedApi: true,
       convertEol: true,
+      scrollback: 1000,
+      smoothScrollDuration: 0,
+      fastScrollModifier: 'alt',
     });
 
     const fitAddon = new FitAddon();
@@ -257,14 +256,24 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     xtermInstance.current = term;
     fitAddonRef.current = fitAddon;
 
-    // Send keystrokes over WebSocket
+    // Fix helper textarea attributes immediately to eliminate mobile keyboard autocorrect/predictive lag
+    const helper = terminalRef.current.querySelector('.xterm-helper-textarea') as HTMLTextAreaElement | null;
+    if (helper) {
+      helper.setAttribute('autocapitalize', 'off');
+      helper.setAttribute('autocomplete', 'off');
+      helper.setAttribute('autocorrect', 'off');
+      helper.setAttribute('spellcheck', 'false');
+      helper.setAttribute('inputmode', 'text');
+    }
+
+    // Send keystrokes over WebSocket directly
     term.onData((data) => {
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(data);
       }
     });
 
-    // Handle Window Resize
+    // Handle Window & Container Resize
     const handleResize = () => {
       if (fitAddonRef.current && xtermInstance.current && wsRef.current) {
         fitAddonRef.current.fit();
@@ -299,7 +308,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     };
   }, []);
 
-  // Update theme dynamically if user toggles theme while terminal is open
+  // Update theme dynamically if user toggles theme
   useEffect(() => {
     if (xtermInstance.current) {
       xtermInstance.current.options.theme = getTerminalTheme();
@@ -335,335 +344,314 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   };
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex flex-col bg-black/85 ${
-        isFullScreen ? 'p-0' : 'p-0 sm:p-4'
-      }`}
-    >
-      <div
-        className={`flex flex-col bg-theme-surface border-theme border-theme-border rounded-none sm:rounded-theme shadow-theme-hard overflow-hidden flex-1 ${
-          isFullScreen ? 'h-full rounded-none border-0' : 'max-w-5xl mx-auto w-full h-full sm:h-auto'
-        }`}
-      >
-        {/* Terminal Header Bar with Safe Area Top */}
-        <div className="flex items-center justify-between px-3.5 py-2.5 bg-theme-card border-b border-theme-border pt-[max(0.625rem,env(safe-area-inset-top))] sm:pt-2.5">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-7 h-7 rounded-theme-sm bg-theme-accent/20 text-theme-accent flex items-center justify-center font-bold">
-              <TerminalIcon className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-bold text-xs sm:text-sm text-theme-text-primary">
-                  {currentUser}@{currentHost || '[No IP Specified]'}:{currentPort}
-                </span>
-                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-theme-bg text-theme-text-muted border border-theme-border hidden sm:inline">
-                  {config.vmName ? config.vmName : `ID ${config.vmid || 'Host'}`}
-                </span>
-              </div>
-            </div>
+    <div className="w-full flex-1 flex flex-col bg-theme-surface border border-theme-border rounded-theme shadow-theme-sm overflow-hidden terminal-tab-container">
+      {/* Terminal Header Bar */}
+      <div className="flex items-center justify-between px-3 py-2 bg-theme-card border-b border-theme-border shrink-0">
+        <div className="flex items-center space-x-2 min-w-0">
+          <div className="w-7 h-7 rounded-theme-sm bg-theme-accent/15 text-theme-accent flex items-center justify-center font-bold shrink-0">
+            <TerminalIcon className="w-4 h-4" />
           </div>
-
-          {/* Status & Window Controls */}
-          <div className="flex items-center space-x-2">
-            {/* Status Pill */}
-            <span
-              className={`flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                status === 'connected'
-                  ? 'bg-theme-running-bg text-theme-running border-theme-running/30'
-                  : status === 'connecting'
-                  ? 'bg-theme-warning-bg text-theme-warning border-theme-warning/30'
-                  : 'bg-theme-danger-bg text-theme-danger border-theme-danger/30'
-              }`}
-            >
-              {status === 'connected' ? (
-                <>
-                  <Wifi className="w-3.5 h-3.5 mr-1" /> Connected
-                </>
-              ) : status === 'connecting' ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 mr-1 animate-spin" /> Connecting
-                </>
-              ) : (
-                <>
-                  <WifiOff className="w-3.5 h-3.5 mr-1" /> Disconnected
-                </>
-              )}
-            </span>
-
-            {/* Toggle Settings Form */}
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`theme-btn px-2.5 py-1 text-xs ${
-                showSettings
-                  ? 'bg-theme-accent text-theme-accent-fg'
-                  : 'bg-theme-surface text-theme-text-primary hover:bg-theme-bg'
-              }`}
-              title="Configure SSH connection host/IP & credentials"
-            >
-              <Settings2 className="w-3.5 h-3.5 sm:mr-1" />
-              <span className="hidden sm:inline">Config</span>
-            </button>
-
-            {/* Reconnect button */}
-            {status === 'disconnected' && !showSettings && (
-              <button
-                onClick={() => connectWebSocket()}
-                className="theme-btn px-2.5 py-1 text-xs bg-theme-accent text-theme-accent-fg"
-                title="Reconnect SSH"
-              >
-                <RefreshCw className="w-3.5 h-3.5 mr-1" /> Reconnect
-              </button>
-            )}
-
-            {/* Fullscreen Toggle */}
-            <button
-              onClick={() => {
-                setIsFullScreen(!isFullScreen);
-                setTimeout(() => fitAddonRef.current?.fit(), 100);
-              }}
-              className="p-1.5 rounded-theme-sm text-theme-text-muted hover:text-theme-text-primary hover:bg-theme-bg hidden sm:block"
-              title={isFullScreen ? 'Exit Fullscreen' : 'Fullscreen'}
-            >
-              {isFullScreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-
-            {/* Close Button */}
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-theme-sm text-theme-text-muted hover:text-theme-text-primary hover:bg-theme-bg"
-              aria-label="Close terminal"
-            >
-              <X className="w-5 h-5" />
-            </button>
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 truncate">
+              <span className="font-bold text-xs sm:text-sm text-theme-text-primary truncate">
+                {currentUser}@{currentHost || '[No IP]'}:{currentPort}
+              </span>
+              <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-theme-bg text-theme-text-muted border border-theme-border shrink-0 hidden sm:inline">
+                {config.vmName ? config.vmName : `ID ${config.vmid || 'Host'}`}
+              </span>
+            </div>
           </div>
         </div>
 
-        {/* Collapsible Connection Settings / Error Resolution Bar */}
-        {showSettings && (
-          <div className="bg-theme-card border-b border-theme-border p-3 sm:p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-150">
-            {errorMessage && (
-              <div className="p-2.5 rounded-theme-sm bg-theme-danger-bg border border-theme-danger/30 text-theme-danger text-xs flex items-start space-x-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                <div>
-                  <p className="font-bold">{errorMessage}</p>
-                  <p className="text-[11px] opacity-80 mt-0.5">
-                    Enter the VM's IPv4 address (e.g. 192.168.1.50) or Proxmox host IP and ensure SSH daemon is running.
-                  </p>
-                </div>
-              </div>
+        {/* Status & Control Actions */}
+        <div className="flex items-center space-x-1.5 shrink-0">
+          {/* Status Pill */}
+          <span
+            className={`flex items-center text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${
+              status === 'connected'
+                ? 'bg-theme-running-bg text-theme-running border-theme-running/30'
+                : status === 'connecting'
+                ? 'bg-theme-warning-bg text-theme-warning border-theme-warning/30'
+                : 'bg-theme-danger-bg text-theme-danger border-theme-danger/30'
+            }`}
+          >
+            {status === 'connected' ? (
+              <>
+                <Wifi className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Connected</span>
+              </>
+            ) : status === 'connecting' ? (
+              <>
+                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                <span className="hidden sm:inline">Connecting</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Offline</span>
+              </>
             )}
+          </span>
 
-            <form onSubmit={handleSaveAndConnect} className="space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 text-xs">
-                {/* Host / IP Input */}
-                <div className="sm:col-span-2 space-y-1">
-                  <label className="font-semibold text-theme-text-primary flex items-center">
-                    <Server className="w-3.5 h-3.5 mr-1 text-theme-accent" /> Target IP / Host
-                  </label>
-                  <input
-                    type="text"
-                    value={currentHost}
-                    onChange={(e) => setCurrentHost(e.target.value)}
-                    placeholder="e.g. 192.168.1.50"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    autoComplete="off"
-                    required
-                    className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
-                  />
-                </div>
+          {/* Toggle Settings Form */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className={`theme-btn px-2 py-1 text-xs min-h-[32px] ${
+              showSettings
+                ? 'bg-theme-accent text-theme-accent-fg'
+                : 'bg-theme-surface text-theme-text-primary hover:bg-theme-bg'
+            }`}
+            title="Configure target IP / Port / Credentials"
+          >
+            <Settings2 className="w-3.5 h-3.5 sm:mr-1" />
+            <span className="hidden sm:inline">Config</span>
+          </button>
 
-                {/* Port */}
-                <div className="space-y-1">
-                  <label className="font-semibold text-theme-text-primary">Port</label>
-                  <input
-                    type="number"
-                    value={currentPort}
-                    onChange={(e) => setCurrentPort(parseInt(e.target.value, 10) || 22)}
-                    placeholder="22"
-                    inputMode="numeric"
-                    required
-                    className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
-                  />
-                </div>
+          {/* Reconnect button if disconnected */}
+          {status === 'disconnected' && !showSettings && (
+            <button
+              onClick={() => connectWebSocket()}
+              className="theme-btn px-2 py-1 text-xs min-h-[32px] bg-theme-accent text-theme-accent-fg"
+              title="Reconnect SSH"
+            >
+              <RefreshCw className="w-3.5 h-3.5 sm:mr-1" />
+              <span className="hidden sm:inline">Reconnect</span>
+            </button>
+          )}
 
-                {/* Username */}
-                <div className="space-y-1">
-                  <label className="font-semibold text-theme-text-primary">User</label>
-                  <input
-                    type="text"
-                    value={currentUser}
-                    onChange={(e) => setCurrentUser(e.target.value)}
-                    placeholder="root"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    autoComplete="off"
-                    required
-                    className="w-full px-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
-                  />
-                </div>
-              </div>
-
-              {/* Password and Connect Button */}
-              <div className="flex flex-col sm:flex-row items-center gap-2.5">
-                <div className="flex-1 w-full relative">
-                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-theme-text-muted">
-                    <Key className="w-3.5 h-3.5" />
-                  </div>
-                  <input
-                    type="password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    placeholder="SSH Password (optional if using keys or prompt)"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    autoComplete="off"
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
-                  />
-                </div>
-
-                <div className="flex items-center space-x-2 w-full sm:w-auto">
-                  <button
-                    type="submit"
-                    className="flex-1 sm:flex-initial theme-btn px-4 py-1.5 text-xs font-bold bg-theme-accent text-theme-accent-fg hover:bg-theme-accent-hover flex items-center justify-center space-x-1"
-                  >
-                    <Check className="w-3.5 h-3.5" />
-                    <span>Connect SSH</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowSettings(false)}
-                    className="theme-btn px-3 py-1.5 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary"
-                  >
-                    Hide
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-        )}
-
-        {/* Xterm.js Container */}
-        <div
-          ref={terminalRef}
-          className="flex-1 p-2 bg-theme-bg overflow-hidden focus:outline-none"
-          onClick={() => xtermInstance.current?.focus()}
-        />
-
-        {/* Mobile-Friendly Virtual Accessory Toolbar with Safe Area */}
-        <div className="bg-theme-card border-t border-theme-border p-1.5 sm:p-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-between overflow-x-auto space-x-1.5">
-          <div className="flex items-center space-x-1.5">
-            <button
-              onClick={() => sendKey('\x1b')}
-              className="theme-btn px-2.5 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-w-[40px]"
-            >
-              ESC
-            </button>
-            <button
-              onClick={() => sendKey('\t')}
-              className="theme-btn px-2.5 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-w-[40px]"
-            >
-              TAB
-            </button>
-            <button
-              onClick={() => setCtrlActive(!ctrlActive)}
-              className={`theme-btn px-2.5 py-1 text-xs font-mono font-bold ${
-                ctrlActive
-                  ? 'bg-theme-accent text-theme-accent-fg'
-                  : 'bg-theme-surface text-theme-text-primary'
-              }`}
-            >
-              CTRL
-            </button>
-            <button
-              onClick={() => setAltActive(!altActive)}
-              className={`theme-btn px-2.5 py-1 text-xs font-mono font-bold ${
-                altActive
-                  ? 'bg-theme-accent text-theme-accent-fg'
-                  : 'bg-theme-surface text-theme-text-primary'
-              }`}
-            >
-              ALT
-            </button>
-            <button
-              onClick={() => sendKey('\x03')}
-              className="theme-btn px-2.5 py-1 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white"
-              title="Interrupt (Ctrl+C)"
-            >
-              ^C
-            </button>
-            <button
-              onClick={() => sendKey('\x04')}
-              className="theme-btn px-2.5 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary"
-              title="EOF / Logout (Ctrl+D)"
-            >
-              ^D
-            </button>
-          </div>
-
-          {/* Navigation Arrows & Screen Clear */}
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => sendKey('\x1b[A')}
-              className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-primary min-w-[36px] flex items-center justify-center"
-              title="Arrow Up"
-              aria-label="Arrow Up"
-            >
-              <ArrowUp className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => sendKey('\x1b[B')}
-              className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-primary min-w-[36px] flex items-center justify-center"
-              title="Arrow Down"
-              aria-label="Arrow Down"
-            >
-              <ArrowDown className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => sendKey('\x1b[D')}
-              className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-primary min-w-[36px] flex items-center justify-center"
-              title="Arrow Left"
-              aria-label="Arrow Left"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={() => sendKey('\x1b[C')}
-              className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-primary min-w-[36px] flex items-center justify-center"
-              title="Arrow Right"
-              aria-label="Arrow Right"
-            >
-              <ArrowRight className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={clearTerminal}
-              className="theme-btn px-2.5 py-1 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary"
-              title="Clear screen buffer"
-              aria-label="Clear screen"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          {/* Close / Disconnect Button */}
+          <button
+            onClick={onClose}
+            className="theme-btn px-2.5 py-1 text-xs min-h-[32px] bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white flex items-center space-x-1"
+            title="Close Terminal & Return"
+            aria-label="Close terminal"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Disconnect</span>
+          </button>
         </div>
-
-        {/* Quick Letter Palette when CTRL is activated on mobile */}
-        {ctrlActive && (
-          <div className="bg-theme-surface border-t border-theme-border p-2 flex flex-wrap gap-1.5 justify-center">
-            {['C', 'Z', 'D', 'A', 'E', 'R', 'L', 'W', 'K', 'U'].map((key) => (
-              <button
-                key={key}
-                onClick={() => handleCtrlKey(key)}
-                className="theme-btn px-3 py-1 text-xs font-mono font-bold bg-theme-card text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg"
-              >
-                Ctrl+{key}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {/* Collapsible Connection Settings Bar */}
+      {showSettings && (
+        <div className="bg-theme-card border-b border-theme-border p-3 space-y-2.5 shrink-0 animate-in fade-in slide-in-from-top-1 duration-150">
+          {errorMessage && (
+            <div className="p-2 rounded-theme-sm bg-theme-danger-bg border border-theme-danger/30 text-theme-danger text-xs flex items-start space-x-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
+              <p className="text-[11px] leading-tight">{errorMessage}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSaveAndConnect} className="space-y-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+              {/* Host / IP Input */}
+              <div className="sm:col-span-2 space-y-1">
+                <label className="font-semibold text-theme-text-primary flex items-center">
+                  <Server className="w-3.5 h-3.5 mr-1 text-theme-accent" /> Target IP / Host
+                </label>
+                <input
+                  type="text"
+                  value={currentHost}
+                  onChange={(e) => setCurrentHost(e.target.value)}
+                  placeholder="e.g. 192.168.1.50"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
+                  required
+                  className="w-full px-2.5 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
+                />
+              </div>
+
+              {/* Port */}
+              <div className="space-y-1">
+                <label className="font-semibold text-theme-text-primary">Port</label>
+                <input
+                  type="number"
+                  value={currentPort}
+                  onChange={(e) => setCurrentPort(parseInt(e.target.value, 10) || 22)}
+                  placeholder="22"
+                  inputMode="numeric"
+                  required
+                  className="w-full px-2.5 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
+                />
+              </div>
+
+              {/* Username */}
+              <div className="space-y-1">
+                <label className="font-semibold text-theme-text-primary">User</label>
+                <input
+                  type="text"
+                  value={currentUser}
+                  onChange={(e) => setCurrentUser(e.target.value)}
+                  placeholder="root"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
+                  required
+                  className="w-full px-2.5 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
+                />
+              </div>
+            </div>
+
+            {/* Password and Connect Button */}
+            <div className="flex flex-col sm:flex-row items-center gap-2">
+              <div className="flex-1 w-full relative">
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-theme-text-muted">
+                  <Key className="w-3.5 h-3.5" />
+                </div>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="SSH Password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-theme-sm border border-theme-border bg-theme-bg text-theme-text-primary focus:outline-none focus:border-theme-accent font-mono"
+                />
+              </div>
+
+              <div className="flex items-center space-x-2 w-full sm:w-auto">
+                <button
+                  type="submit"
+                  className="flex-1 sm:flex-initial theme-btn px-3 py-1.5 text-xs font-bold bg-theme-accent text-theme-accent-fg hover:bg-theme-accent-hover flex items-center justify-center space-x-1"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Connect</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(false)}
+                  className="theme-btn px-3 py-1.5 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary"
+                >
+                  Hide
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Xterm.js Canvas Container (No background scrolling) */}
+      <div
+        ref={terminalRef}
+        className="flex-1 w-full p-2 bg-theme-bg overflow-hidden focus:outline-none select-none"
+        onClick={() => xtermInstance.current?.focus()}
+      />
+
+      {/* Mobile Virtual Accessory Keyboard Toolbar */}
+      <div className="bg-theme-card border-t border-theme-border p-1.5 flex items-center justify-between overflow-x-auto space-x-1 shrink-0">
+        <div className="flex items-center space-x-1 shrink-0">
+          <button
+            onClick={() => sendKey('\x1b')}
+            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[36px]"
+          >
+            ESC
+          </button>
+          <button
+            onClick={() => sendKey('\t')}
+            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[36px]"
+          >
+            TAB
+          </button>
+          <button
+            onClick={() => setCtrlActive(!ctrlActive)}
+            className={`theme-btn px-2 py-1 text-xs font-mono font-bold min-h-[30px] ${
+              ctrlActive
+                ? 'bg-theme-accent text-theme-accent-fg'
+                : 'bg-theme-surface text-theme-text-primary'
+            }`}
+          >
+            CTRL
+          </button>
+          <button
+            onClick={() => setAltActive(!altActive)}
+            className={`theme-btn px-2 py-1 text-xs font-mono font-bold min-h-[30px] ${
+              altActive
+                ? 'bg-theme-accent text-theme-accent-fg'
+                : 'bg-theme-surface text-theme-text-primary'
+            }`}
+          >
+            ALT
+          </button>
+          <button
+            onClick={() => sendKey('\x03')}
+            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[30px]"
+            title="Interrupt (Ctrl+C)"
+          >
+            ^C
+          </button>
+          <button
+            onClick={() => sendKey('\x04')}
+            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
+            title="EOF / Logout (Ctrl+D)"
+          >
+            ^D
+          </button>
+        </div>
+
+        {/* Navigation Arrows & Screen Clear */}
+        <div className="flex items-center space-x-1 shrink-0">
+          <button
+            onClick={() => sendKey('\x1b[A')}
+            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            title="Arrow Up"
+            aria-label="Arrow Up"
+          >
+            <ArrowUp className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => sendKey('\x1b[B')}
+            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            title="Arrow Down"
+            aria-label="Arrow Down"
+          >
+            <ArrowDown className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => sendKey('\x1b[D')}
+            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            title="Arrow Left"
+            aria-label="Arrow Left"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => sendKey('\x1b[C')}
+            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            title="Arrow Right"
+            aria-label="Arrow Right"
+          >
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={clearTerminal}
+            className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
+            title="Clear screen buffer"
+            aria-label="Clear screen"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Quick Letter Palette when CTRL is activated on mobile */}
+      {ctrlActive && (
+        <div className="bg-theme-surface border-t border-theme-border p-1.5 flex flex-wrap gap-1 justify-center shrink-0">
+          {['C', 'Z', 'D', 'A', 'E', 'R', 'L', 'W', 'K', 'U'].map((key) => (
+            <button
+              key={key}
+              onClick={() => handleCtrlKey(key)}
+              className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-card text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px]"
+            >
+              Ctrl+{key}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

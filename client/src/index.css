@@ -199,9 +199,32 @@ button, a, input, select, textarea {
 }
 
 /* Terminal Full Screen & Xterm container fix */
+.terminal-tab-container {
+  height: calc(100vh - 12rem);
+  min-height: 480px;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 768px) {
+  .terminal-tab-container {
+    height: calc(100dvh - 10.5rem);
+    min-height: 400px;
+    overscroll-behavior: contain;
+  }
+}
+
+.xterm {
+  height: 100%;
+}
+
+.xterm-screen {
+  touch-action: none;
+}
+
 .xterm .xterm-viewport {
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 /* Bottom Sheet Grabber */
