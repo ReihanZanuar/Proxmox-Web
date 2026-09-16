@@ -591,34 +591,118 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         }}
       />
 
-      {/* Mobile Virtual Accessory Keyboard Toolbar */}
+      {/* Nano / Editor Quick Action Bar (Visible when in Nano helper or quick mode) */}
+      <div className="bg-theme-card/90 border-t border-theme-border px-2 py-1 flex items-center space-x-1.5 overflow-x-auto scrollbar-none shrink-0 text-xs">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-theme-text-muted shrink-0 mr-0.5">
+          Quick:
+        </span>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => sendKey('\t')}
+          className="theme-btn px-2.5 py-1 text-xs font-mono font-bold bg-theme-accent text-theme-accent-fg hover:bg-theme-accent-hover min-h-[30px] shadow-sm flex items-center space-x-1 shrink-0"
+          title="Tab Autocomplete"
+        >
+          <span>TAB</span>
+          <span className="text-[10px] opacity-80">⇥</span>
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => sendKey('\t\t')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] shrink-0"
+          title="Double Tab (List completions)"
+        >
+          2x TAB
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('X')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[30px] shrink-0"
+          title="Exit Nano (Ctrl+X)"
+        >
+          ^X (Exit)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('O')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-running-bg text-theme-running hover:bg-theme-running hover:text-white min-h-[30px] shrink-0"
+          title="Save File / WriteOut in Nano (Ctrl+O)"
+        >
+          ^O (Save)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('W')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] shrink-0"
+          title="Where Is / Search (Ctrl+W)"
+        >
+          ^W (Find)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('K')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] shrink-0"
+          title="Cut Line in Nano (Ctrl+K)"
+        >
+          ^K (Cut)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('U')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] shrink-0"
+          title="Uncut / Paste in Nano (Ctrl+U)"
+        >
+          ^U (Paste)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('R')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] shrink-0"
+          title="Read File / Search History (Ctrl+R)"
+        >
+          ^R (Read)
+        </button>
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => handleCtrlKey('G')}
+          className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px] shrink-0"
+          title="Help in Nano (Ctrl+G)"
+        >
+          ^G (Help)
+        </button>
+      </div>
+
+      {/* Main Accessory Keyboard Toolbar */}
       <div className="bg-theme-card border-t border-theme-border p-1 flex items-center justify-between overflow-x-auto space-x-1 shrink-0 scrollbar-none">
         <div className="flex items-center space-x-1 shrink-0">
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x1b')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px] min-w-[34px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[36px]"
           >
             ESC
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\t')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px] min-w-[34px]"
+            className="theme-btn px-2.5 py-0.5 text-xs font-mono font-bold bg-theme-accent/20 text-theme-accent border-theme-accent/40 hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[42px]"
           >
             TAB
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setCtrlActive(!ctrlActive)}
-            className={`theme-btn px-2 py-0.5 text-xs font-mono font-bold min-h-[28px] ${
+            className={`theme-btn px-2.5 py-0.5 text-xs font-mono font-bold min-h-[30px] ${
               ctrlActive
-                ? 'bg-theme-accent text-theme-accent-fg'
+                ? 'bg-theme-accent text-theme-accent-fg ring-2 ring-theme-accent/50'
                 : 'bg-theme-surface text-theme-text-primary'
             }`}
           >
-            CTRL
+            CTRL {ctrlActive ? '▼' : '▲'}
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => setAltActive(!altActive)}
-            className={`theme-btn px-2 py-0.5 text-xs font-mono font-bold min-h-[28px] ${
+            className={`theme-btn px-2 py-0.5 text-xs font-mono font-bold min-h-[30px] ${
               altActive
                 ? 'bg-theme-accent text-theme-accent-fg'
                 : 'bg-theme-surface text-theme-text-primary'
@@ -627,40 +711,46 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
             ALT
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x03')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[30px]"
             title="Interrupt (Ctrl+C)"
           >
             ^C
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x04')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
             title="EOF / Logout (Ctrl+D)"
           >
             ^D
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('/')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] min-w-[28px]"
           >
             /
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('-')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] min-w-[28px]"
           >
             -
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('|')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] min-w-[28px]"
           >
             |
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('~')}
-            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[30px] min-w-[28px]"
           >
             ~
           </button>
@@ -669,40 +759,45 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         {/* Navigation Arrows & Screen Clear */}
         <div className="flex items-center space-x-1 shrink-0">
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x1b[A')}
-            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[30px] flex items-center justify-center"
             title="Arrow Up"
             aria-label="Arrow Up"
           >
             <ArrowUp className="w-3.5 h-3.5" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x1b[B')}
-            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[30px] flex items-center justify-center"
             title="Arrow Down"
             aria-label="Arrow Down"
           >
             <ArrowDown className="w-3.5 h-3.5" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x1b[D')}
-            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[30px] flex items-center justify-center"
             title="Arrow Left"
             aria-label="Arrow Left"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={() => sendKey('\x1b[C')}
-            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[30px] flex items-center justify-center"
             title="Arrow Right"
             aria-label="Arrow Right"
           >
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
           <button
+            onMouseDown={(e) => e.preventDefault()}
             onClick={clearTerminal}
-            className="theme-btn px-2 py-0.5 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[28px]"
+            className="theme-btn px-2 py-0.5 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
             title="Clear screen buffer"
             aria-label="Clear screen"
           >
@@ -711,18 +806,38 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         </div>
       </div>
 
-      {/* Quick Letter Palette when CTRL is activated on mobile */}
+      {/* Complete Full Alphabet Ctrl Palette when CTRL is toggled */}
       {ctrlActive && (
-        <div className="bg-theme-surface border-t border-theme-border p-1 flex flex-wrap gap-1 justify-center shrink-0">
-          {['C', 'Z', 'D', 'A', 'E', 'R', 'L', 'W', 'K', 'U'].map((key) => (
+        <div className="bg-theme-surface border-t border-theme-border p-2 space-y-1.5 shrink-0 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <div className="flex items-center justify-between text-[11px] text-theme-text-muted px-1 font-mono">
+            <span>Select Control Key (Ctrl + Key):</span>
             <button
-              key={key}
-              onClick={() => handleCtrlKey(key)}
-              className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-card text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[26px]"
+              onClick={() => setCtrlActive(false)}
+              className="text-theme-accent font-bold hover:underline"
             >
-              Ctrl+{key}
+              Close [✕]
             </button>
-          ))}
+          </div>
+          <div className="grid grid-cols-7 sm:grid-cols-13 gap-1">
+            {['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'].map((key) => {
+              const isHighlight = ['X', 'O', 'W', 'K', 'U', 'C', 'Z', 'D', 'A', 'E', 'L', 'R'].includes(key);
+              return (
+                <button
+                  key={key}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => handleCtrlKey(key)}
+                  className={`theme-btn px-1 py-1 text-xs font-mono font-bold min-h-[32px] flex items-center justify-center ${
+                    isHighlight
+                      ? 'bg-theme-card text-theme-accent border-theme-accent/40 hover:bg-theme-accent hover:text-theme-accent-fg'
+                      : 'bg-theme-bg text-theme-text-primary hover:bg-theme-card'
+                  }`}
+                  title={`Ctrl+${key}`}
+                >
+                  ^{key}
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
