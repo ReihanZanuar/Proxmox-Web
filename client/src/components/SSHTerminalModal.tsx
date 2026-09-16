@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
@@ -21,6 +21,7 @@ import {
   ArrowLeft,
   ArrowRight,
   LogOut,
+  ChevronLeft,
 } from 'lucide-react';
 
 interface SSHTerminalModalProps {
@@ -29,11 +30,17 @@ interface SSHTerminalModalProps {
 }
 
 export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onClose }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const xtermInstance = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const { theme } = useTheme();
+
+  // Dynamic visual viewport height for mobile virtual keyboard awareness
+  const [viewportHeight, setViewportHeight] = useState<number>(() => {
+    return window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  });
 
   // Load cached SSH credentials for this specific VM if previously saved
   const cacheKey = config.vmid ? `pve_ssh_vm_${config.vmid}` : null;
@@ -65,7 +72,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   const [altActive, setAltActive] = useState(false);
 
   // Setup terminal theme colors
-  const getTerminalTheme = () => {
+  const getTerminalTheme = useCallback(() => {
     switch (theme) {
       case 'light':
         return {
@@ -133,7 +140,27 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           white: '#EDEDEE',
         };
     }
-  };
+  }, [theme]);
+
+  const fitTerminal = useCallback(() => {
+    if (fitAddonRef.current && xtermInstance.current) {
+      try {
+        fitAddonRef.current.fit();
+        xtermInstance.current.scrollToBottom();
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(
+            JSON.stringify({
+              type: 'resize',
+              cols: xtermInstance.current.cols,
+              rows: xtermInstance.current.rows,
+            })
+          );
+        }
+      } catch {
+        // Safe catch for detached DOM instances during render
+      }
+    }
+  }, []);
 
   const connectWebSocket = (targetHost?: string, targetPort?: number, targetUser?: string, targetPass?: string) => {
     const hostToUse = targetHost !== undefined ? targetHost : currentHost;
@@ -191,22 +218,14 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
       setStatus('connected');
       setShowSettings(false);
       setErrorMessage(null);
-      if (fitAddonRef.current && xtermInstance.current) {
-        fitAddonRef.current.fit();
-        ws.send(
-          JSON.stringify({
-            type: 'resize',
-            cols: xtermInstance.current.cols,
-            rows: xtermInstance.current.rows,
-          })
-        );
-      }
+      setTimeout(fitTerminal, 50);
     };
 
     ws.onmessage = (event) => {
       const text = event.data.toString();
       if (xtermInstance.current) {
         xtermInstance.current.write(text);
+        xtermInstance.current.scrollToBottom();
       }
 
       // Check if message contains connection error
@@ -228,16 +247,45 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     };
   };
 
+  // Handle Mobile Virtual Viewport & Virtual Keyboard resize
+  useEffect(() => {
+    const handleViewportChange = () => {
+      const vv = window.visualViewport;
+      if (vv) {
+        setViewportHeight(vv.height);
+      } else {
+        setViewportHeight(window.innerHeight);
+      }
+      setTimeout(fitTerminal, 60);
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+    }
+    window.addEventListener('resize', handleViewportChange);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+      window.removeEventListener('resize', handleViewportChange);
+    };
+  }, [fitTerminal]);
+
+  // Initialize xterm
   useEffect(() => {
     if (!terminalRef.current) return;
 
-    // Initialize xterm.js with optimized mobile typing parameters
+    const isMobile = window.innerWidth <= 768;
+
     const term = new Terminal({
       cursorBlink: true,
       cursorStyle: 'block',
-      fontSize: 13,
+      fontSize: isMobile ? 12 : 13,
       fontFamily: 'JetBrains Mono, Menlo, Monaco, Consolas, monospace',
-      lineHeight: 1.2,
+      lineHeight: 1.15,
       theme: getTerminalTheme(),
       allowProposedApi: true,
       convertEol: true,
@@ -259,11 +307,12 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     // Fix helper textarea attributes immediately to eliminate mobile keyboard autocorrect/predictive lag
     const helper = terminalRef.current.querySelector('.xterm-helper-textarea') as HTMLTextAreaElement | null;
     if (helper) {
-      helper.setAttribute('autocapitalize', 'off');
+      helper.setAttribute('autocapitalize', 'none');
       helper.setAttribute('autocomplete', 'off');
       helper.setAttribute('autocorrect', 'off');
       helper.setAttribute('spellcheck', 'false');
       helper.setAttribute('inputmode', 'text');
+      helper.setAttribute('aria-autocomplete', 'none');
     }
 
     // Send keystrokes over WebSocket directly
@@ -271,25 +320,8 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
       if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
         wsRef.current.send(data);
       }
+      term.scrollToBottom();
     });
-
-    // Handle Window & Container Resize
-    const handleResize = () => {
-      if (fitAddonRef.current && xtermInstance.current && wsRef.current) {
-        fitAddonRef.current.fit();
-        if (wsRef.current.readyState === WebSocket.OPEN) {
-          wsRef.current.send(
-            JSON.stringify({
-              type: 'resize',
-              cols: xtermInstance.current.cols,
-              rows: xtermInstance.current.rows,
-            })
-          );
-        }
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
 
     if (initialHost) {
       connectWebSocket(initialHost, initialPort, initialUser, initialPassword);
@@ -302,7 +334,6 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     term.focus();
 
     return () => {
-      window.removeEventListener('resize', handleResize);
       if (wsRef.current) wsRef.current.close();
       term.dispose();
     };
@@ -313,7 +344,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     if (xtermInstance.current) {
       xtermInstance.current.options.theme = getTerminalTheme();
     }
-  }, [theme]);
+  }, [theme, getTerminalTheme]);
 
   // Mobile Virtual Key Helper Functions
   const sendKey = (keyString: string) => {
@@ -322,6 +353,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     }
     if (xtermInstance.current) {
       xtermInstance.current.focus();
+      xtermInstance.current.scrollToBottom();
     }
   };
 
@@ -344,10 +376,24 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
   };
 
   return (
-    <div className="w-full flex-1 flex flex-col bg-theme-surface border border-theme-border rounded-theme shadow-theme-sm overflow-hidden terminal-tab-container">
+    <div
+      ref={containerRef}
+      className="fixed inset-0 z-50 sm:relative sm:inset-auto sm:z-auto w-full flex flex-col bg-theme-surface sm:border sm:border-theme-border sm:rounded-theme sm:shadow-theme-sm overflow-hidden"
+      style={{
+        height: window.innerWidth <= 768 ? `${viewportHeight}px` : undefined,
+        maxHeight: window.innerWidth <= 768 ? `${viewportHeight}px` : 'calc(100vh - 12rem)',
+      }}
+    >
       {/* Terminal Header Bar */}
       <div className="flex items-center justify-between px-3 py-2 bg-theme-card border-b border-theme-border shrink-0">
         <div className="flex items-center space-x-2 min-w-0">
+          <button
+            onClick={onClose}
+            className="p-1 -ml-1 text-theme-text-muted hover:text-theme-text-primary sm:hidden"
+            aria-label="Back to dashboard"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
           <div className="w-7 h-7 rounded-theme-sm bg-theme-accent/15 text-theme-accent flex items-center justify-center font-bold shrink-0">
             <TerminalIcon className="w-4 h-4" />
           </div>
@@ -367,7 +413,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         <div className="flex items-center space-x-1.5 shrink-0">
           {/* Status Pill */}
           <span
-            className={`flex items-center text-[11px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${
+            className={`flex items-center text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full border ${
               status === 'connected'
                 ? 'bg-theme-running-bg text-theme-running border-theme-running/30'
                 : status === 'connecting'
@@ -396,7 +442,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           {/* Toggle Settings Form */}
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`theme-btn px-2 py-1 text-xs min-h-[32px] ${
+            className={`theme-btn px-2 py-1 text-xs min-h-[30px] ${
               showSettings
                 ? 'bg-theme-accent text-theme-accent-fg'
                 : 'bg-theme-surface text-theme-text-primary hover:bg-theme-bg'
@@ -411,7 +457,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           {status === 'disconnected' && !showSettings && (
             <button
               onClick={() => connectWebSocket()}
-              className="theme-btn px-2 py-1 text-xs min-h-[32px] bg-theme-accent text-theme-accent-fg"
+              className="theme-btn px-2 py-1 text-xs min-h-[30px] bg-theme-accent text-theme-accent-fg"
               title="Reconnect SSH"
             >
               <RefreshCw className="w-3.5 h-3.5 sm:mr-1" />
@@ -422,12 +468,12 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           {/* Close / Disconnect Button */}
           <button
             onClick={onClose}
-            className="theme-btn px-2.5 py-1 text-xs min-h-[32px] bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white flex items-center space-x-1"
-            title="Close Terminal & Return"
-            aria-label="Close terminal"
+            className="theme-btn px-2.5 py-1 text-xs min-h-[30px] bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white flex items-center space-x-1"
+            title="Exit SSH Terminal"
+            aria-label="Exit SSH"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Disconnect</span>
+            <span className="hidden sm:inline">Exit</span>
           </button>
         </div>
       </div>
@@ -539,27 +585,30 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
       <div
         ref={terminalRef}
         className="flex-1 w-full p-2 bg-theme-bg overflow-hidden focus:outline-none select-none"
-        onClick={() => xtermInstance.current?.focus()}
+        onClick={() => {
+          xtermInstance.current?.focus();
+          xtermInstance.current?.scrollToBottom();
+        }}
       />
 
       {/* Mobile Virtual Accessory Keyboard Toolbar */}
-      <div className="bg-theme-card border-t border-theme-border p-1.5 flex items-center justify-between overflow-x-auto space-x-1 shrink-0">
+      <div className="bg-theme-card border-t border-theme-border p-1 flex items-center justify-between overflow-x-auto space-x-1 shrink-0 scrollbar-none">
         <div className="flex items-center space-x-1 shrink-0">
           <button
             onClick={() => sendKey('\x1b')}
-            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[36px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px] min-w-[34px]"
           >
             ESC
           </button>
           <button
             onClick={() => sendKey('\t')}
-            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[30px] min-w-[36px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px] min-w-[34px]"
           >
             TAB
           </button>
           <button
             onClick={() => setCtrlActive(!ctrlActive)}
-            className={`theme-btn px-2 py-1 text-xs font-mono font-bold min-h-[30px] ${
+            className={`theme-btn px-2 py-0.5 text-xs font-mono font-bold min-h-[28px] ${
               ctrlActive
                 ? 'bg-theme-accent text-theme-accent-fg'
                 : 'bg-theme-surface text-theme-text-primary'
@@ -569,7 +618,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={() => setAltActive(!altActive)}
-            className={`theme-btn px-2 py-1 text-xs font-mono font-bold min-h-[30px] ${
+            className={`theme-btn px-2 py-0.5 text-xs font-mono font-bold min-h-[28px] ${
               altActive
                 ? 'bg-theme-accent text-theme-accent-fg'
                 : 'bg-theme-surface text-theme-text-primary'
@@ -579,17 +628,41 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={() => sendKey('\x03')}
-            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[30px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-danger-bg text-theme-danger hover:bg-theme-danger hover:text-white min-h-[28px]"
             title="Interrupt (Ctrl+C)"
           >
             ^C
           </button>
           <button
             onClick={() => sendKey('\x04')}
-            className="theme-btn px-2 py-1 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[28px]"
             title="EOF / Logout (Ctrl+D)"
           >
             ^D
+          </button>
+          <button
+            onClick={() => sendKey('/')}
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+          >
+            /
+          </button>
+          <button
+            onClick={() => sendKey('-')}
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+          >
+            -
+          </button>
+          <button
+            onClick={() => sendKey('|')}
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+          >
+            |
+          </button>
+          <button
+            onClick={() => sendKey('~')}
+            className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-surface text-theme-text-primary hover:bg-theme-card min-h-[28px] min-w-[28px]"
+          >
+            ~
           </button>
         </div>
 
@@ -597,7 +670,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
         <div className="flex items-center space-x-1 shrink-0">
           <button
             onClick={() => sendKey('\x1b[A')}
-            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
             title="Arrow Up"
             aria-label="Arrow Up"
           >
@@ -605,7 +678,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={() => sendKey('\x1b[B')}
-            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
             title="Arrow Down"
             aria-label="Arrow Down"
           >
@@ -613,7 +686,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={() => sendKey('\x1b[D')}
-            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
             title="Arrow Left"
             aria-label="Arrow Left"
           >
@@ -621,7 +694,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={() => sendKey('\x1b[C')}
-            className="theme-btn px-1.5 py-1 text-xs bg-theme-surface text-theme-text-primary min-h-[30px] min-w-[32px] flex items-center justify-center"
+            className="theme-btn px-1.5 py-0.5 text-xs bg-theme-surface text-theme-text-primary min-h-[28px] min-w-[30px] flex items-center justify-center"
             title="Arrow Right"
             aria-label="Arrow Right"
           >
@@ -629,7 +702,7 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
           </button>
           <button
             onClick={clearTerminal}
-            className="theme-btn px-2 py-1 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[30px]"
+            className="theme-btn px-2 py-0.5 text-xs bg-theme-surface text-theme-text-muted hover:text-theme-text-primary min-h-[28px]"
             title="Clear screen buffer"
             aria-label="Clear screen"
           >
@@ -640,12 +713,12 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
 
       {/* Quick Letter Palette when CTRL is activated on mobile */}
       {ctrlActive && (
-        <div className="bg-theme-surface border-t border-theme-border p-1.5 flex flex-wrap gap-1 justify-center shrink-0">
+        <div className="bg-theme-surface border-t border-theme-border p-1 flex flex-wrap gap-1 justify-center shrink-0">
           {['C', 'Z', 'D', 'A', 'E', 'R', 'L', 'W', 'K', 'U'].map((key) => (
             <button
               key={key}
               onClick={() => handleCtrlKey(key)}
-              className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-card text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[28px]"
+              className="theme-btn px-2 py-0.5 text-xs font-mono font-bold bg-theme-card text-theme-text-primary hover:bg-theme-accent hover:text-theme-accent-fg min-h-[26px]"
             >
               Ctrl+{key}
             </button>
@@ -655,3 +728,4 @@ export const SSHTerminalModal: React.FC<SSHTerminalModalProps> = ({ config, onCl
     </div>
   );
 };
+
